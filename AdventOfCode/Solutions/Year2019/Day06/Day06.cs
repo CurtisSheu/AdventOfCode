@@ -37,7 +37,7 @@ namespace AdventOfCode.Solutions.Year2019
 
                 newInnerPlanet.addDirectOrbit(newOuterPlanet);
             }
-            return innerPlanets[0].orbitCount().ToString();
+            return innerPlanets[0].orbitCount(0).ToString();
         }
 
         protected override string solvePartTwo()
@@ -57,13 +57,13 @@ namespace AdventOfCode.Solutions.Year2019
             directOrbits = new List<Planet>();
         }
 
-        public int orbitCount()
+        public int orbitCount(int level)
         {
-            int count = directOrbits.Count;
+            int count = 0;
             foreach (Planet p in directOrbits)
-                count += p.orbitCount();
+                count += p.orbitCount(level + 1);
 
-            return count;
+            return count + level;
         }
 
         public void addDirectOrbit(Planet p)

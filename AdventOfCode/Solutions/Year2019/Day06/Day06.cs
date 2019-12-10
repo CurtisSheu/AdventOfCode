@@ -6,13 +6,13 @@ namespace AdventOfCode.Solutions.Year2019
 {
     class Day06 : ASolution
     {
-        public Day06() : base(6, 2019, "Universal Orbit Map") { }
+        Planet innerMostPlanet;
 
-        protected override string solvePartOne()
+        public Day06() : base(6, 2019, "Universal Orbit Map") 
         {
             string[] orbitList = Input.splitByNewLine();
             List<Planet> innerPlanets = new List<Planet>();
-            foreach(string orbit in orbitList)
+            foreach (string orbit in orbitList)
             {
                 string[] planetList = orbit.Split(')');
 
@@ -21,9 +21,9 @@ namespace AdventOfCode.Solutions.Year2019
                 foreach (Planet planet in innerPlanets)
                 {
                     if (newInnerPlanet == null)
-                        newInnerPlanet = planet.getPlanetByName(planetList[0]);
+                        newInnerPlanet = planet.getPlanetByName(planetList[0]).p;
                     if (newOuterPlanet == null)
-                        newOuterPlanet = planet.getPlanetByName(planetList[1]);
+                        newOuterPlanet = planet.getPlanetByName(planetList[1]).p;
                 }
                 if (newInnerPlanet == null)
                 {
@@ -37,12 +37,18 @@ namespace AdventOfCode.Solutions.Year2019
 
                 newInnerPlanet.addDirectOrbit(newOuterPlanet);
             }
-            return innerPlanets[0].orbitCount(0).ToString();
+
+            innerMostPlanet = innerPlanets[0];
+        }
+
+        protected override string solvePartOne()
+        {
+            return innerMostPlanet.orbitCount(0).ToString();
         }
 
         protected override string solvePartTwo()
         {
-            return "";
+            return innerMostPlanet.getPlanetByName("YOU").p.getDistanceToOtherPlanet("SAN", 0).ToString(); ;
         }
     }
 
@@ -50,6 +56,7 @@ namespace AdventOfCode.Solutions.Year2019
     {
         private List<Planet> directOrbits;
         public string name { get; }
+        private Planet parentPlanet { get; set; }
 
         public Planet(string n)
         {
@@ -69,20 +76,31 @@ namespace AdventOfCode.Solutions.Year2019
         public void addDirectOrbit(Planet p)
         {
             directOrbits.Add(p);
+            p.parentPlanet = this;
         }
 
-        public Planet getPlanetByName(string planetToFind)
+        public (int distance, Planet p) getPlanetByName(string planetToFind)
         {
             if (name == planetToFind)
-                return this;
+                return (0, this);
 
             foreach(Planet p in directOrbits)
             {
                 var result = p.getPlanetByName(planetToFind);
-                if (result != null)
-                    return result;
+                if (result.p != null)
+                    return (1 + result.distance, result.p);
             }
-            return null;
+            return (-1, null);
+        }
+
+        public int getDistanceToOtherPlanet(string destinationPlanetName, int distanceUp)
+        {
+            var result = getPlanetByName(destinationPlanetName);
+
+            if (result.p != null)
+                return result.distance + distanceUp - 2;
+
+            return parentPlanet.getDistanceToOtherPlanet(destinationPlanetName, distanceUp + 1);
         }
     }
 }

@@ -6,11 +6,11 @@ namespace AdventOfCode.Solutions.Year2019
 {
     class Day05 : ASolution
     {
-        IntcodeComputer machine;
+        IntcodeComputer<int> machine;
 
         public Day05() : base(5, 2019, "Sunny with a Chance of Asteroids")
         {
-            machine = new IntcodeComputer(Input.toIntArray(","));
+            machine = new IntcodeComputer<int>(Input.toIntArray(","));
         }
             
         protected override string solvePartOne()

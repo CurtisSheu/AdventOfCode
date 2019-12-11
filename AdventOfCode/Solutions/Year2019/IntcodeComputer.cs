@@ -5,59 +5,92 @@ using System.Linq;
 
 namespace AdventOfCode.Solutions.Year2019
 {
-    class IntcodeComputer
+    class IntcodeComputer<T> where T : IComparable<T>
     {
-        int[] intcode;
-        public int[] memory { get; private set; }
+        private T[] intCode;
+        public Dictionary<long, T> memory { get; private set; }
 
-        public List<int> input { get; private set; }
-        public List<int> output { get; private set; }
+        public bool paused { get; private set; }
+        public Queue<T> input { get; private set; }
+        public Queue<T> output { get; private set; }
 
-        public IntcodeComputer(int[] input)
+        private long instructionCounter;
+        private long relativeBase;
+
+        public IntcodeComputer(T[] input)
         {
-            intcode = input;
-            initialize();
+            intCode = input;
         }
 
-        public IntcodeComputer initialize(int? noun = null, int? verb = null)
+        public IntcodeComputer<T> initialize(int? noun = null, int? verb = null)
         {
-            memory = new int[intcode.Length];
-            intcode.CopyTo(memory, 0);
-            if (noun != null) memory[1] = noun.Value;
-            if (verb != null) memory[2] = verb.Value;
-            input = new List<int>();
-            output = new List<int>();
+            instructionCounter = 0;
+            relativeBase = 0;
+            copyIntcodeToMemory();
+            if (noun != null) memory[1] = (T)(object)noun.Value;
+            if (verb != null) memory[2] = (T)(object)verb.Value;
+            input = new Queue<T>();
+            output = new Queue<T>();
             return this;
         }
 
-        public IntcodeComputer run(int? inp = null)
+        private void copyIntcodeToMemory()
         {
-            if (inp != null) input.Add(inp.Value);
+            long x = 0;
+            memory = new Dictionary<long, T>();
+            foreach(T i in intCode)
+            {
+                memory.Add(x, i);
+                x++;
+            }
+        }
+
+        public IntcodeComputer<T> inputSequence(params T[] inp)
+        {
+            foreach (T i in inp)
+                input.Enqueue(i);
+
+            return this;
+        }
+
+        public IntcodeComputer<T> run(int? inp = null)
+        {
+            if (inp != null) inputSequence((T)(object)inp.Value);
+            paused = false;
 
             (Mode[] modes, OpCode opcode) = parseInstruction(memory[0]);
-            int instructionCounter = 0;
 
             while (opcode != OpCode.halt)
             {
-                int location = memory[instructionCounter + 1];
-                if (opcode == OpCode.input || opcode == OpCode.output)
+                if (opcode == OpCode.input || opcode == OpCode.output || opcode == OpCode.adjust)
                 {
                     switch (opcode)
                     {
                         case OpCode.input:
-                            memory[location] = input[0];
+                            if (input.Count > 0)
+                            {
+                                parseWriteMode(modes[0], memory[instructionCounter + 1], input.Dequeue());
+                            }
+                            else
+                            {
+                                paused = true;
+                                return this;
+                            }
                             break;
                         case OpCode.output:
-                            int val1 = parseMode(modes[0], memory[instructionCounter + 1]);
-                            output.Add(val1);
+                            dynamic val1 = parseReadMode(modes[0], memory[instructionCounter + 1]);
+                            output.Enqueue(val1);
+                            break;
+                        case OpCode.adjust:
+                            relativeBase = relativeBase + (dynamic)parseReadMode(modes[0], memory[instructionCounter + 1]);
                             break;
                     }
                     instructionCounter += 2;
-                }                
+                }
                 else if (opcode == OpCode.jumpIfFalse || opcode == OpCode.jumpIfTrue)
                 {
-                    int val1 = parseMode(modes[0], memory[instructionCounter + 1]);
-                    int val2 = parseMode(modes[1], memory[instructionCounter + 2]);
+                    dynamic val1 = parseReadMode(modes[0], memory[instructionCounter + 1]);
+                    dynamic val2 = parseReadMode(modes[1], memory[instructionCounter + 2]);
                     bool jump = false;
 
                     switch (opcode)
@@ -80,29 +113,33 @@ namespace AdventOfCode.Solutions.Year2019
                     if (!jump)
                         instructionCounter += 3;
                 }
-                else
+                else if (opcode == OpCode.add || opcode == OpCode.multiply || opcode == OpCode.lessThan || opcode == OpCode.equals)
                 {
-                    int val1 = parseMode(modes[0], memory[instructionCounter + 1]);
-                    int val2 = parseMode(modes[1], memory[instructionCounter + 2]);
-                    int outputLocation = memory[instructionCounter + 3];
+                    dynamic val1 = parseReadMode(modes[0], memory[instructionCounter + 1]);
+                    dynamic val2 = parseReadMode(modes[1], memory[instructionCounter + 2]);
+                    dynamic valueToWrite = 0;
 
                     switch (opcode)
                     {
                         case OpCode.add:
-                            memory[outputLocation] = val1 + val2;
+                            valueToWrite = val1 + val2;
                             break;
                         case OpCode.multiply:
-                            memory[outputLocation] = val1 * val2;
+                            valueToWrite = val1 * val2;
                             break;
                         case OpCode.lessThan:
-                            memory[outputLocation] = val1 < val2 ? 1 : 0;
+                            valueToWrite = val1 < val2 ? 1 : 0;
                             break;
                         case OpCode.equals:
-                            memory[outputLocation] = val1 == val2 ? 1 : 0;
+                            valueToWrite = val1 == val2 ? 1 : 0;
                             break;
                     }
+
+                    parseWriteMode(modes[2], memory[instructionCounter + 3], valueToWrite);
                     instructionCounter += 4;
                 }
+                else
+                    throw new NotImplementedException();
 
 
                 (modes, opcode) = parseInstruction(memory[instructionCounter]);
@@ -111,26 +148,38 @@ namespace AdventOfCode.Solutions.Year2019
             return this;
         }
 
-        private int parseMode(Mode mode, int value)
+        public string Diagnose()
+        {
+            while (output.Count > 1)
+                if ((int)(object)output.Dequeue() != 0)
+                    return "Diagonsis failed";
+
+            return output.Dequeue().ToString();
+        }
+
+        private T parseReadMode(Mode mode, T value)
         {
             if (mode == Mode.position)
-                return memory[value];
+                return memory[(dynamic)value];
+            else if (mode == Mode.relative)
+                return memory[(dynamic)value + relativeBase];
             else
                 return value;
         }
 
-        public string Diagnose()
+        private void parseWriteMode(Mode mode, T writeLocation, T valueToWrite)
         {
-            for (int i = 0; i < output.Count - 1; i++)
-                if (output[i] != 0)
-                    return "Diagonsis failed";
-
-            return output.Last().ToString();
+            if (mode == Mode.position)
+                memory[(dynamic)writeLocation] = valueToWrite;
+            else if (mode == Mode.relative)
+                memory[(dynamic)writeLocation + relativeBase] = valueToWrite;
+            else
+                throw new NotImplementedException();
         }
 
-        private (Mode[] modes, OpCode opcode) parseInstruction(int input)
+        private (Mode[] modes, OpCode opcode) parseInstruction(T input)
         {
-            string instruction = input.ToString("D5");
+            string instruction = Convert.ToInt32(input).ToString("D5");
 
             OpCode opcode = Enum.Parse<OpCode>(instruction.Substring(3));
             Mode[] modes = instruction.Substring(0, 3).reverse()
@@ -140,7 +189,7 @@ namespace AdventOfCode.Solutions.Year2019
             return (modes, opcode);
         }
 
-        enum Mode { position = 0, immediate = 1}
-        enum OpCode { add = 1, multiply = 2, input = 3, output = 4, jumpIfTrue = 5, jumpIfFalse = 6, lessThan = 7, equals = 8, halt = 99};
+        enum Mode { position = 0, immediate = 1, relative = 2}
+        enum OpCode { add = 1, multiply = 2, input = 3, output = 4, jumpIfTrue = 5, jumpIfFalse = 6, lessThan = 7, equals = 8, adjust=9, halt = 99};
     }
 }

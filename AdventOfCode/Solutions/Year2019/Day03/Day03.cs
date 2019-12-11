@@ -20,8 +20,8 @@ namespace AdventOfCode.Solutions.Year2019
         {
             int minimumDistance = int.MaxValue;
             foreach(KeyValuePair<(int, int), int> pos in wire1)
-                if(wire2.ContainsKey(pos.Key) && calculateManhattanDistance(pos.Key) < minimumDistance)
-                    minimumDistance = calculateManhattanDistance(pos.Key);
+                if(wire2.ContainsKey(pos.Key) && Utility.calculateManhattanDistance((0, 0), pos.Key) < minimumDistance)
+                    minimumDistance = Utility.calculateManhattanDistance((0, 0), pos.Key);
 
             return minimumDistance.ToString();
         }
@@ -34,11 +34,6 @@ namespace AdventOfCode.Solutions.Year2019
                     minimumDistance = pos.Value+ wire2[pos.Key];
 
             return minimumDistance.ToString();
-        }
-
-        private int calculateManhattanDistance((int x, int y) pos)
-        {
-            return Math.Abs(pos.x) + Math.Abs(pos.y);
         }
 
         private void evaluateWire(string[] instructions, Dictionary<(int, int), int> wireLengths)

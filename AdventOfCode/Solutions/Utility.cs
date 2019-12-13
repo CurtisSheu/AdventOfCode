@@ -98,6 +98,22 @@ namespace AdventOfCode.Solutions
             return a == 0 ? b : a;
         }
 
+        public static long GCD(long a, long b)
+        {
+            a = Math.Abs(a);
+            b = Math.Abs(b);
+
+            while (a != 0 && b != 0)
+            {
+                if (a > b)
+                    a %= b;
+                else
+                    b %= a;
+            }
+
+            return a == 0 ? b : a;
+        }
+
         public static double angleToVector(this Vector2 a, Vector2 b)
         {
             double angleInRadians = Math.Atan2(a.Y, a.X) - Math.Atan2(b.Y, b.X);
@@ -109,6 +125,26 @@ namespace AdventOfCode.Solutions
         public static int calculateManhattanDistance((int x, int y) pos1, (int x, int y) pos2)
         {
             return Math.Abs(pos2.x - pos1.x) + Math.Abs(pos2.y - pos1.y);
+        }
+
+        public static long LCM(IList<long> numbers)
+        {
+            if (numbers.Count < 2)
+                throw new ArgumentException("Two or more numbers are required");
+            return LCM(numbers, 0);
+        }
+
+        private static long LCM(IList<long> numbers, int i)
+        {
+            if (i + 2 == numbers.Count)
+                return LCM(numbers[i], numbers[i + 1]);
+            else
+                return LCM(numbers[i], LCM(numbers, i + 1));
+        }
+
+        private static long LCM(long a, long b)
+        {
+            return (a * b / GCD(a, b));
         }
     }
 }

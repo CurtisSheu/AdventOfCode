@@ -160,9 +160,19 @@ namespace AdventOfCode.Solutions.Year2019
         private T parseReadMode(Mode mode, T value)
         {
             if (mode == Mode.position)
+            {
+                if (!memory.ContainsKey((dynamic)value))
+                    memory.Add((dynamic)value, default(T));
+
                 return memory[(dynamic)value];
+            }
             else if (mode == Mode.relative)
+            {
+                if (!memory.ContainsKey((dynamic)value + relativeBase))
+                    memory.Add((dynamic)value + relativeBase, default(T));
+
                 return memory[(dynamic)value + relativeBase];
+            }
             else
                 return value;
         }

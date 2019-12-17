@@ -58,7 +58,7 @@ namespace AdventOfCode.Solutions.Year2019
             if (inp != null) inputSequence((T)(object)inp.Value);
             paused = false;
 
-            (Mode[] modes, OpCode opcode) = parseInstruction(memory[0]);
+            (Mode[] modes, OpCode opcode) = parseInstruction(memory[instructionCounter]);
 
             while (opcode != OpCode.halt)
             {

@@ -6,16 +6,16 @@ namespace AdventOfCode.Solutions.Year2019
 {
     class reaction
     {
-        public (int amount, string name) outputChemical;
-        public List<(int amount, string name)> inputChemicals { get; }
+        public (long amount, string name) outputChemical;
+        public List<(long amount, string name)> inputChemicals { get; }
 
-        public reaction(int amount, string name)
+        public reaction(long amount, string name)
         {
             outputChemical = (amount, name);
-            inputChemicals = new List<(int amount, string name)>();
+            inputChemicals = new List<(long amount, string name)>();
         }
 
-        public void addInput((int amount, string name) newInput)
+        public void addInput((long amount, string name) newInput)
         {
             inputChemicals.Add(newInput);
         }

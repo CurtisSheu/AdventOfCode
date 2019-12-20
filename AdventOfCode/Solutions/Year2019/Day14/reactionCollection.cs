@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace AdventOfCode.Solutions.Year2019
@@ -7,7 +8,7 @@ namespace AdventOfCode.Solutions.Year2019
     class reactionCollection
     {
         Dictionary<string, reaction> allReactions = new Dictionary<string, reaction>();
-        Dictionary<string, int> leftOverMaterials = new Dictionary<string, int>();
+        Dictionary<string, long> leftOverMaterials = new Dictionary<string, long>();
 
         public reactionCollection(string[] reactionLines)
         {
@@ -18,42 +19,58 @@ namespace AdventOfCode.Solutions.Year2019
                 MatchCollection matches = Regex.Matches(reaction, pattern);
 
                 string outputChemical = matches[matches.Count - 1].Groups["name"].Value;
-                int outputAmount = Convert.ToInt32(matches[matches.Count - 1].Groups["qty"].Value);
+                long outputAmount = Convert.ToInt64(matches[matches.Count - 1].Groups["qty"].Value);
 
                 allReactions.Add(outputChemical, new reaction(outputAmount, outputChemical));
 
                 for (int i = 0; i < matches.Count - 1; i++)
-                    allReactions[outputChemical].addInput((Convert.ToInt32(matches[i].Groups["qty"].Value), matches[i].Groups["name"].Value));
+                    allReactions[outputChemical].addInput((Convert.ToInt64(matches[i].Groups["qty"].Value), matches[i].Groups["name"].Value));
             }
         }
 
-        public int calculateFuelGivenOreAmount(long oreAmount)
+        public long calculateFuelGivenOreAmount(long oreAmount)
         {
-            int fuel = 0;
-            while (oreAmount > 0)
+            long baseOreValue = calculateOreAmounts(1, "FUEL");
+            oreAmount -= baseOreValue;
+            long fuel = 1;
+
+            long prediction = oreAmount / baseOreValue / 2;
+            
+            while (true)
             {
-                oreAmount -= calculateOreAmounts(1, "FUEL");
-                fuel++;
+                var tempLeftOverMaterials = leftOverMaterials.ToDictionary(entry => entry.Key, entry => entry.Value);
+                long oreToConsume = calculateOreAmounts((long)prediction, "FUEL");
+
+                if (oreToConsume > oreAmount)
+                {
+                    if (prediction <= 1)
+                        break;
+                    prediction /= 2;
+                    leftOverMaterials = tempLeftOverMaterials.ToDictionary(entry => entry.Key, entry => entry.Value);
+                }
+                else
+                {
+                    oreAmount -= oreToConsume;
+                    fuel += (long)prediction;
+                }
             }
 
-            if (oreAmount < 0)
-                fuel--;
 
             return fuel;
         }
 
-        public int calculateOreAmounts(int inputAmount, string chemicalInput)
+        public long calculateOreAmounts(long inputAmount, string chemicalInput)
         {
-            int oreAmount = 0;
+            long oreAmount = 0;
 
-            int amountProduced = allReactions[chemicalInput].outputChemical.amount;
-            int timesToRun = inputAmount / amountProduced + 1;
+            long amountProduced = allReactions[chemicalInput].outputChemical.amount;
+            long timesToRun = inputAmount / amountProduced + 1;
             if (inputAmount % amountProduced == 0)
                 timesToRun--;
 
-            foreach ((int amount, string name) input in allReactions[chemicalInput].inputChemicals)
+            foreach ((long amount, string name) input in allReactions[chemicalInput].inputChemicals)
             {
-                int inputNeeded = checkReserves(timesToRun * input.amount, input.name);
+                long inputNeeded = checkReserves(timesToRun * input.amount, input.name);
 
                 if (inputNeeded > 0)
                 {
@@ -72,11 +89,11 @@ namespace AdventOfCode.Solutions.Year2019
             return oreAmount;
         }
 
-        private int checkReserves(int amountNeeded, string chemicalInput)
+        private long checkReserves(long amountNeeded, string chemicalInput)
         {
             if (leftOverMaterials.ContainsKey(chemicalInput))
             {
-                int amountNeededAfterReserves = amountNeeded - leftOverMaterials[chemicalInput];
+                long amountNeededAfterReserves = amountNeeded - leftOverMaterials[chemicalInput];
                 leftOverMaterials[chemicalInput] -= amountNeeded;
 
                 if (leftOverMaterials[chemicalInput] <= 0)

@@ -53,25 +53,33 @@ namespace AdventOfCode
 
         public static Config Get(string path)
         {
-            var options = new JsonSerializerOptions()
+            try
             {
-                IgnoreNullValues = true,
-                PropertyNameCaseInsensitive = true,
-                WriteIndented = true
-            };
-            Config config;
-            if (File.Exists(path))
-            {
-                config = JsonSerializer.Deserialize<Config>(File.ReadAllText(path), options);
-                config.setDefaults();
+                var options = new JsonSerializerOptions()
+                {
+                    IgnoreNullValues = true,
+                    PropertyNameCaseInsensitive = true,
+                    WriteIndented = true
+                };
+                Config config;
+                if (File.Exists(path))
+                {
+                    config = JsonSerializer.Deserialize<Config>(File.ReadAllText(path), options);
+                    config.setDefaults();
+                }
+                else
+                {
+                    config = new Config();
+                    config.setDefaults();
+                    File.WriteAllText(path, JsonSerializer.Serialize<Config>(config, options));
+                }
+                return config;
             }
-            else
+            catch (Exception e)
             {
-                config = new Config();
-                config.setDefaults();
-                File.WriteAllText(path, JsonSerializer.Serialize<Config>(config, options));
+                Console.WriteLine(e.Message);
+                return null;
             }
-            return config;
         }
     }
 }

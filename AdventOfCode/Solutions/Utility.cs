@@ -41,6 +41,22 @@ namespace AdventOfCode.Solutions
                 .ToArray();
         }
 
+        public static bool[,] toTwoDimensionalBoolArray(this string str, char falseValue='0', char trueValue='1')
+        {
+            string[] lines = str.splitByNewLine();
+
+            bool[,] output = new bool[lines.Length, lines[0].Length];
+
+            for(int i = 0; i < lines.Length; i++)
+                for (int j = 0; j< lines[i].Length; j++)
+                    if (lines[i][j] == trueValue)
+                        output[i, j] = true;
+                    else
+                        output[i, j] = false;
+
+            return output;
+        }
+
         public static int[] toDigitArray(this int input)
         {
             List<int> digits = new List<int>();

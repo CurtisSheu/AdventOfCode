@@ -34,8 +34,13 @@ namespace AdventOfCode.Solutions
         
         public static string[] splitByNewLine(this string str, bool trim = false)
         {
+            return str.splitByDelimiters(new[] { "\r", "\n", "\r\n" }, trim);
+        }
+
+        public static string[] splitByDelimiters(this string str, string[] delimiters, bool trim = false)
+        {
             return str
-                .Split(new[] { "\r", "\n", "\r\n" }, StringSplitOptions.None)
+                .Split(delimiters, StringSplitOptions.None)
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .Select(s => trim ? s.Trim() : s)
                 .ToArray();

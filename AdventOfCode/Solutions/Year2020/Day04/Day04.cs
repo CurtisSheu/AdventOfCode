@@ -68,11 +68,11 @@ namespace AdventOfCode.Solutions.Year2020
 
         public bool StrictCheck()
         {
-            if (checkKeyYear("byr", 1920, 2002))
+            if (!checkKeyYear("byr", 1920, 2002))
                 return false;
-            if (checkKeyYear("iyr", 2010, 2020))
+            if (!checkKeyYear("iyr", 2010, 2020))
                 return false;
-            if (checkKeyYear("eyr", 2020, 2030))
+            if (!checkKeyYear("eyr", 2020, 2030))
                 return false;
             if (!checkHeight())
                 return false;
@@ -88,7 +88,7 @@ namespace AdventOfCode.Solutions.Year2020
 
         private bool checkKeyYear(string key, int min, int max)
         {
-            if (!entries.ContainsKey(key) || checkIfValueIsIntAndWithinRange(entries[key], min, max))
+            if (!entries.ContainsKey(key) || !checkIfValueIsIntAndWithinRange(entries[key], min, max))
                 return false;
 
             return true;

@@ -42,8 +42,8 @@ namespace AdventOfCode.Solutions.Year2020
             public int NumberOfBagsContainingDescriptor(string descriptor)
             {
                 int count = 0;
-                foreach (KeyValuePair<string, bagContents> bag in allBagContents)
-                    if (bag.Value.ContainsDescriptor(descriptor))
+                foreach (bagContents bag in allBagContents.Values)
+                    if (bag.ContainsDescriptor(descriptor))
                         count++;
 
                 return count;

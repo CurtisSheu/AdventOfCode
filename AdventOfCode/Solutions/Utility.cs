@@ -62,6 +62,23 @@ namespace AdventOfCode.Solutions
             return output;
         }
 
+        public static T[] GetAdjacentElements<T>(this T[,] array, int x, int y)
+        {
+            List<T> adjacentElements = new List<T>();
+
+            int minX = x != 0 ? x - 1 : 0;
+            int maxX = x != array.GetLength(0) - 1 ? x + 1 : array.GetLength(0) - 1;
+            int minY = y != 0 ? y - 1 : 0;
+            int maxY = y != array.GetLength(1) - 1 ? y + 1 : array.GetLength(1) - 1;
+
+            for (int i = minX; i <= maxX; i++)
+                for (int j = minY; j <= maxY; j++)
+                    if (i != x || j != y)
+                        adjacentElements.Add(array[i, j]);
+
+            return adjacentElements.ToArray();
+        }
+
         public static int[] toDigitArray(this int input)
         {
             List<int> digits = new List<int>();
@@ -166,6 +183,11 @@ namespace AdventOfCode.Solutions
         private static long LCM(long a, long b)
         {
             return (a * b / GCD(a, b));
+        }
+
+        public static int mod(this int x, int m)
+        {
+            return (x % m + m) % m;
         }
     }
 }
